@@ -1,0 +1,22 @@
+{
+  "disponibilidad": {
+    "2026-04-18": {
+      "mesas": 2,
+      "horarios": [
+        "09:00",
+        "13:00"
+      ]
+    }
+  },
+  "reservaciones": {
+    "066BF37D": {
+      "id": "066BF37D",
+      "fecha": "2026-04-18",
+      "horario": "09:00",
+      "nombre": "Zaid",
+      "notas": "40k",
+      "estado": "confirmada",
+      "creada_en": "2026-04-16T14:47:09.334664"
+    }
+  }
+}
