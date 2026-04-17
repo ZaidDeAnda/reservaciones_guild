@@ -4,6 +4,7 @@ from db import (
     get_db, get_disponibilidad, upsert_disponibilidad,
     delete_disponibilidad, delete_past_disponibilidad,
     count_reservations, get_all_reservations,
+    delete_reservation,
 )
 
 # ── Config ───────────────────────────────────────────────────────────────────
@@ -21,19 +22,16 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 h1, h2, h3 { font-family: 'Playfair Display', serif !important; }
 
-/* Fondo principal */
 .stApp {
     background: linear-gradient(135deg, #1f1f1f 0%, #2b2b2b 50%, #1f1f1f 100%);
     color: #e6f7f7;
 }
 
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background: #181818 !important;
     border-right: 1px solid #00cfd1;
 }
 
-/* Métricas */
 .metric-box {
     background: rgba(0, 207, 209, 0.08);
     border: 1px solid rgba(0, 207, 209, 0.4);
@@ -56,7 +54,6 @@ section[data-testid="stSidebar"] {
     margin-top: 0.3rem;
 }
 
-/* Inputs */
 .stTextInput input, .stNumberInput input {
     background: rgba(255,255,255,0.06) !important;
     border: 1px solid rgba(0, 207, 209, 0.4) !important;
@@ -64,7 +61,6 @@ section[data-testid="stSidebar"] {
     border-radius: 8px !important;
 }
 
-/* Selects / Multiselect */
 .stSelectbox > div > div,
 .stMultiSelect > div > div {
     background: #242424 !important;
@@ -79,7 +75,6 @@ section[data-testid="stSidebar"] {
     color: #aaf6f7 !important;
 }
 
-/* Botones */
 .stButton > button {
     background: linear-gradient(135deg, #00cfd1, #00a8aa) !important;
     color: #0d0d0d !important;
@@ -93,14 +88,12 @@ section[data-testid="stSidebar"] {
     box-shadow: 0 6px 20px rgba(0, 207, 209, 0.4) !important;
 }
 
-/* Divider */
 .divider {
     border: none;
     border-top: 1px solid rgba(0, 207, 209, 0.2);
     margin: 1.5rem 0;
 }
 
-/* Card de reserva */
 .reservation-card {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(0, 207, 209, 0.22);
@@ -137,12 +130,10 @@ def get_upcoming_weekends(n=6):
         d += timedelta(days=1)
     return weekends[:n * 2]
 
-
 def date_label(d: date) -> str:
     dias = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
     meses = ["", "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
     return f"{dias[d.weekday()]} {d.day} {meses[d.month]}"
-
 
 # ── Connect ──────────────────────────────────────────────────────────────────
 try:
@@ -152,7 +143,7 @@ except Exception as e:
     st.stop()
 
 # ── Header ───────────────────────────────────────────────────────────────────
-st.markdown("## Panel de Administración")
+st.markdown("## 🍽️ Panel de Administración")
 st.markdown("Configura la disponibilidad de mesas para cada fin de semana y revisa quién ha reservado.")
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
@@ -185,7 +176,6 @@ with st.sidebar:
 # ── Tabs ─────────────────────────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["➕ Configurar disponibilidad", "📋 Ver configuración actual"])
 
-# ═══ TAB 1 – Configurar ══════════════════════════════════════════════════════
 with tab1:
     upcoming = get_upcoming_weekends()
     st.markdown("### Selecciona el día a configurar")
@@ -209,7 +199,7 @@ with tab1:
         st.caption("Define los turnos que estarán abiertos para reservar")
 
         slots = []
-        for h in range(9, 23):
+        for h in range(12, 23):
             slots.append(f"{h:02d}:00")
             if h < 22:
                 slots.append(f"{h:02d}:30")
@@ -249,7 +239,6 @@ with tab1:
                 )
                 st.rerun()
 
-# ═══ TAB 2 – Ver ═════════════════════════════════════════════════════════════
 with tab2:
     st.markdown("### Disponibilidad configurada")
     disponibilidad = get_disponibilidad(db)
@@ -302,29 +291,47 @@ with tab2:
                 else:
                     for r in reservas_dia:
                         nombre = r.get("nombre", "Sin nombre")
+                        telefono = r.get("telefono", "Sin teléfono")
                         horario = r.get("horario", "Sin horario")
+                        personas = r.get("personas", "—")
+                        codigo = r.get("id", "—")
                         notas = r.get("notas", "")
+                        estado = r.get("estado", "—")
 
-                        notas_html = f"<strong>♟ Juego:</strong> {notas}" if notas else ""
+                        notas_html = f"<br><strong>📝 Notas:</strong> {notas}" if notas else ""
 
-                        st.markdown(f"""
-                        <div class="reservation-card">
-                            <div class="reservation-name">{nombre}</div>
-                            <div class="reservation-meta">
-                                🕐 <strong>Horario:</strong> {horario}<br>
+                        col_info, col_action = st.columns([5, 1])
+
+                        with col_info:
+                            st.markdown(f"""
+                            <div class="reservation-card">
+                                <div class="reservation-name">{nombre}</div>
+                                <div class="reservation-meta">
+                                    📞 <strong>Tel:</strong> {telefono}<br>
+                                    🕐 <strong>Horario:</strong> {horario}<br>
+                                    👥 <strong>Personas:</strong> {personas}{notas_html}
+                                </div>
+                                <div class="reservation-extra">
+                                    Código: <strong>{codigo}</strong> &nbsp;|&nbsp; Estado: <strong>{estado}</strong>
+                                </div>
                             </div>
-                            {notas_html}
-                        </div>
-                        """, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
+
+                        with col_action:
+                            st.markdown("<br>", unsafe_allow_html=True)
+                            if st.button("🗑️ Eliminar", key=f"delete_res_{codigo}", use_container_width=True):
+                                delete_reservation(db, codigo)
+                                st.success(f"Reservación {codigo} eliminada.")
+                                st.rerun()
 
                 a1, a2, _ = st.columns([1, 1, 3])
                 with a1:
                     if st.button("✏️ Editar", key=f"edit_{date_str}"):
                         st.info(f"Ve a 'Configurar' y selecciona {label}.")
                 with a2:
-                    if st.button("🗑️ Eliminar", key=f"del_{date_str}"):
+                    if st.button("🗑️ Eliminar día", key=f"del_{date_str}"):
                         delete_disponibilidad(db, date_str)
                         st.rerun()
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
-st.caption("Sistema de Reservaciones · Panel Administrativo")
+st.caption("🍽️ Sistema de Reservaciones · Panel Administrativo")
