@@ -120,22 +120,25 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif !important; }
     text-align: center;
     color: #e6f7f7;
     box-shadow: 0 6px 24px rgba(0,0,0,0.20);
+    max-width: 100%;
 }
 
 .confirm-box .check {
     font-size: 3rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
 .confirm-box h2 {
     color: #00e5e7 !important;
-    font-size: 1.8rem !important;
-    margin-bottom: 0.8rem;
+    font-size: 1.7rem !important;
+    margin-bottom: 0.6rem;
 }
 
+/* 📱 Mobile */
 @media (max-width: 640px) {
     .confirm-box {
-        padding: 1.1rem;
+        padding: 1.2rem;
+        border-radius: 12px;
     }
 
     .confirm-box .check {
@@ -143,7 +146,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif !important; }
     }
 
     .confirm-box h2 {
-        font-size: 1.35rem !important;
+        font-size: 1.3rem !important;
     }
 }
 
@@ -350,18 +353,53 @@ elif st.session_state.step == 3:
     b = st.session_state.booking
 
     st.markdown('<div class="confirm-box">', unsafe_allow_html=True)
+
     st.markdown('<div class="check">🎉</div>', unsafe_allow_html=True)
     st.markdown('<h2>¡Reservación confirmada!</h2>', unsafe_allow_html=True)
 
     st.markdown(
         f"""
-        Hola **{b['nombre']}**, te esperamos el  
-        **{b['fecha_label']}** a las **{b['horario']} hrs**.
-        """
+        <div style="margin-top:0.5rem; line-height:1.6; font-size:1rem;">
+            Hola <strong>{b['nombre']}</strong>,<br>
+            te esperamos el<br>
+            <strong style="color:#00e5e7">{b['fecha_label']}</strong><br>
+            a las <strong style="color:#00e5e7">{b['horario']} hrs</strong>.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     if b.get("notas"):
-        st.markdown(f"**Juego:** {b['notas']}")
+        st.markdown(
+            f"""
+            <div style="
+                margin-top:0.8rem;
+                padding:0.6rem 0.8rem;
+                background: rgba(0,207,209,0.08);
+                border:1px solid rgba(0,207,209,0.25);
+                border-radius:10px;
+                font-size:0.95rem;
+            ">
+                🎲 Juego: <strong>{b['notas']}</strong>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        """
+        <div style="
+            margin-top:1rem;
+            font-size:0.85rem;
+            color:#8fdfe0;
+        ">
+            💬 Solo da tu nombre al llegar y listo.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Hacer otra reservación"):
