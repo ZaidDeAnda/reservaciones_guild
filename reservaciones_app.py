@@ -5,11 +5,11 @@ from db import (
     get_db, get_disponibilidad,
     count_reservations, insert_reservation,
 )
+from ui import set_page, render_brand_header
 
 # ── Config ────────────────────────────────────────────────────────────────────
-st.set_page_config(
+set_page(
     page_title="Reserva tu Mesa",
-    page_icon="🪑",
     layout="centered",
 )
 
@@ -201,13 +201,21 @@ except Exception as e:
     st.stop()
 
 # ── State ────────────────────────────────────────────────────────────────────
-if "step"    not in st.session_state: st.session_state.step    = 1
-if "booking" not in st.session_state: st.session_state.booking = {}
+if "step" not in st.session_state:
+    st.session_state.step = 1
+if "booking" not in st.session_state:
+    st.session_state.booking = {}
+
+# ── Header ───────────────────────────────────────────────────────────────────
+render_brand_header(
+    title="The Guild",
+    subtitle="Reserva tu mesa y elige tu juego",
+)
 
 # ── Hero ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="hero">
-    <h1>🪑 Reserva tu Mesa</h1>
+    <h1>♟ Reserva tu Mesa</h1>
     <p>Elige el día y horario que más te convenga</p>
 </div>
 """, unsafe_allow_html=True)
@@ -253,8 +261,10 @@ if st.session_state.step == 1:
     if not available_slots:
         st.error("😔 No hay mesas disponibles en esta fecha. Elige otra.")
     else:
-        slot_labels   = {f"{s} ({av} {'mesa' if av==1 else 'mesas'} libre{'s' if av!=1 else ''})": s
-                         for s, av in slots_info if av > 0}
+        slot_labels = {
+            f"{s} ({av} {'mesa' if av==1 else 'mesas'} libre{'s' if av!=1 else ''})": s
+            for s, av in slots_info if av > 0
+        }
         chosen_slot_l = st.selectbox("Horario", list(slot_labels.keys()))
         chosen_slot   = slot_labels[chosen_slot_l]
 
@@ -285,9 +295,11 @@ elif st.session_state.step == 2:
     st.markdown('<div class="step-card">', unsafe_allow_html=True)
     st.markdown('<div class="step-label">Paso 2 · Tus datos</div>', unsafe_allow_html=True)
 
-    nombre   = st.text_input("👤 Nombre",   placeholder="Comisario Yarrick")
-    notas    = st.text_input("📝 Juego",
-                              placeholder="40k, kill team, legion....")
+    nombre = st.text_input("👤 Nombre", placeholder="Comisario Yarrick")
+    notas = st.text_input(
+        "📝 Juego",
+        placeholder="40k, Kill Team, Legion..."
+    )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -301,7 +313,6 @@ elif st.session_state.step == 2:
             if not nombre.strip():
                 st.error("Por favor ingresa tu nombre.")
             else:
-                # Race-condition check
                 cfg  = get_disponibilidad(db).get(b["fecha"], {})
                 used = count_reservations(db, b["fecha"], b["horario"])
                 if used >= cfg.get("mesas", 0):
@@ -322,6 +333,7 @@ elif st.session_state.step == 2:
                     st.session_state.booking.update({
                         "id":       booking_id,
                         "nombre":   nombre.strip(),
+                        "notas":    notas.strip(),
                     })
                     st.session_state.step = 3
                     st.rerun()
@@ -330,6 +342,15 @@ elif st.session_state.step == 2:
 # ═══ STEP 3 – Confirmación ════════════════════════════════════════════════════
 elif st.session_state.step == 3:
     b = st.session_state.booking
+
+    juego_html = ""
+    if b.get("notas"):
+        juego_html = f"""
+        <p style="color:#b7e4c7;margin-top:0.6rem">
+            Juego: <strong style="color:#95d5b2">{b['notas']}</strong>
+        </p>
+        """
+
     st.markdown(f"""
     <div class="confirm-box">
         <div class="check">🎉</div>
@@ -339,6 +360,7 @@ elif st.session_state.step == 3:
             <strong style="color:#95d5b2">{b['fecha_label']}</strong> a las
             <strong style="color:#95d5b2">{b['horario']} hrs</strong>.
         </p>
+        {juego_html}
         <div style="margin-top:1rem;color:#74c69d;font-size:0.85rem">Tu código de reserva:</div>
         <div class="code">{b['id']}</div>
         <p style="font-size:0.78rem;color:#74c69d;margin-top:1rem">
@@ -354,4 +376,4 @@ elif st.session_state.step == 3:
         st.rerun()
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
-st.caption("🪑 Sistema de Reservaciones · ¿Preguntas? Contáctanos directamente.")
+st.caption("♟ The Guild · ¿Preguntas? Contáctanos directamente.")

@@ -6,11 +6,11 @@ from db import (
     count_reservations, get_all_reservations,
     delete_reservation,
 )
+from ui import set_page, render_brand_header
 
 # ── Config ───────────────────────────────────────────────────────────────────
-st.set_page_config(
+set_page(
     page_title="Admin · Gestión de Mesas",
-    page_icon="🍽️",
     layout="wide",
 )
 
@@ -143,7 +143,11 @@ except Exception as e:
     st.stop()
 
 # ── Header ───────────────────────────────────────────────────────────────────
-st.markdown("## 🍽️ Panel de Administración")
+render_brand_header(
+    title="The Guild · Admin",
+    subtitle="Configuración de mesas y control de reservaciones",
+)
+st.markdown("## Panel de Administración")
 st.markdown("Configura la disponibilidad de mesas para cada fin de semana y revisa quién ha reservado.")
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
@@ -152,6 +156,11 @@ todas_reservas = get_all_reservations(db)
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
+    render_brand_header(
+        title="The Guild",
+        subtitle="Vista administrativa",
+    )
+
     st.markdown("### 📊 Resumen")
     st.markdown(f"""
     <div class="metric-box">
@@ -295,8 +304,6 @@ with tab2:
                         codigo = r.get("id", "—")
                         notas = r.get("notas", "")
 
-                        notas_html = f"<br><strong>📝 Notas:</strong> {notas}" if notas else ""
-
                         col_info, col_action = st.columns([5, 1])
 
                         with col_info:
@@ -327,4 +334,4 @@ with tab2:
                         st.rerun()
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
-st.caption("🍽️ Sistema de Reservaciones · Panel Administrativo")
+st.caption("♟ The guild · Panel Administrativo")
