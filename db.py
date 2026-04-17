@@ -74,9 +74,5 @@ def get_reservations_for_date(db, fecha_str: str) -> list:
         {"_id": 0}
     ))
 
-def cancel_reservation(db, reservation_id: str) -> bool:
-    result = db.reservaciones.update_one(
-        {"id": reservation_id},
-        {"$set": {"estado": "cancelada"}}
-    )
-    return result.modified_count > 0
+def delete_reservation(db, reservation_id: str):
+    db.reservaciones.delete_one({"id": reservation_id})
