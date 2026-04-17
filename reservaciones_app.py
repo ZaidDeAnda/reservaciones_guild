@@ -363,12 +363,6 @@ elif st.session_state.step == 3:
     if b.get("notas"):
         st.markdown(f"**Juego:** {b['notas']}")
 
-    st.markdown("Tu código de reserva:")
-    st.code(b["id"])
-
-    st.caption("Guarda este código — te lo pediremos al llegar.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Hacer otra reservación"):
         st.session_state.step = 1
