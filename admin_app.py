@@ -208,7 +208,7 @@ with tab1:
         st.caption("Define los turnos que estarán abiertos para reservar")
 
         slots = []
-        for h in range(12, 23):
+        for h in range(6, 23):
             slots.append(f"{h:02d}:00")
             if h < 22:
                 slots.append(f"{h:02d}:30")
