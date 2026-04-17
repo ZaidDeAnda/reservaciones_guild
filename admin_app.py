@@ -304,8 +304,9 @@ with tab2:
                             <div class="reservation-card">
                                 <div class="reservation-name">{nombre}</div>
                                 <div class="reservation-extra">
-                                    Código: <strong>{codigo}</strong> &nbsp;|&nbsp;
+                                    Código: <strong>{codigo}</strong> &nbsp;|&nbsp; Horario: <strong>{horario}</strong>
                                 </div>
+                                <div class="reservation-extra">♟ Juego: {notas}</div>
                             </div>
                             """, unsafe_allow_html=True)
 
