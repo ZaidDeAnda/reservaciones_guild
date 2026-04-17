@@ -300,6 +300,7 @@ with tab2:
                 else:
                     for r in reservas_dia:
                         nombre = r.get("nombre", "Sin nombre")
+                        rival = r.get("rival", "Sin rival")
                         horario = r.get("horario", "Sin horario")
                         codigo = r.get("id", "—")
                         notas = r.get("notas", "")
@@ -309,7 +310,7 @@ with tab2:
                         with col_info:
                             st.markdown(f"""
                             <div class="reservation-card">
-                                <div class="reservation-name">{nombre}</div>
+                                <div class="reservation-name">{nombre} VS {rival}</div>
                                 <div class="reservation-extra">
                                     Código: <strong>{codigo}</strong> &nbsp;|&nbsp; Horario: <strong>{horario}</strong>
                                 </div>

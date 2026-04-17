@@ -305,6 +305,7 @@ elif st.session_state.step == 2:
     st.markdown('<div class="step-label">Paso 2 · Tus datos</div>', unsafe_allow_html=True)
 
     nombre = st.text_input("👤 Nombre", placeholder="Comisario Yarrick")
+    rival = st.text_input("👤 Nombre del rival", placeholder="Ghazghkull")
     notas = st.text_input(
         "📝 Juego",
         placeholder="40k, Kill Team, Legion..."
@@ -335,6 +336,7 @@ elif st.session_state.step == 2:
                         "fecha":      b["fecha"],
                         "horario":    b["horario"],
                         "nombre":     nombre.strip(),
+                        "rival":      rival.strip(),
                         "notas":      notas.strip(),
                         "estado":     "confirmada",
                         "creada_en":  datetime.now().isoformat(),
@@ -342,6 +344,7 @@ elif st.session_state.step == 2:
                     st.session_state.booking.update({
                         "id":       booking_id,
                         "nombre":   nombre.strip(),
+                        "rival":    rival.strip(),
                         "notas":    notas.strip(),
                     })
                     st.session_state.step = 3
