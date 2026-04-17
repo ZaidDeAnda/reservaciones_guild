@@ -291,12 +291,9 @@ with tab2:
                 else:
                     for r in reservas_dia:
                         nombre = r.get("nombre", "Sin nombre")
-                        telefono = r.get("telefono", "Sin teléfono")
                         horario = r.get("horario", "Sin horario")
-                        personas = r.get("personas", "—")
                         codigo = r.get("id", "—")
                         notas = r.get("notas", "")
-                        estado = r.get("estado", "—")
 
                         notas_html = f"<br><strong>📝 Notas:</strong> {notas}" if notas else ""
 
@@ -306,13 +303,8 @@ with tab2:
                             st.markdown(f"""
                             <div class="reservation-card">
                                 <div class="reservation-name">{nombre}</div>
-                                <div class="reservation-meta">
-                                    📞 <strong>Tel:</strong> {telefono}<br>
-                                    🕐 <strong>Horario:</strong> {horario}<br>
-                                    👥 <strong>Personas:</strong> {personas}{notas_html}
-                                </div>
                                 <div class="reservation-extra">
-                                    Código: <strong>{codigo}</strong> &nbsp;|&nbsp; Estado: <strong>{estado}</strong>
+                                    Código: <strong>{codigo}</strong> &nbsp;|&nbsp;
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
