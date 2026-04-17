@@ -116,54 +116,34 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif !important; }
     background: linear-gradient(135deg, #181818, #252525);
     border: 1px solid rgba(0, 207, 209, 0.35);
     border-radius: 16px;
-    padding: 1.4rem;
+    padding: 1.6rem;
     text-align: center;
     color: #e6f7f7;
     box-shadow: 0 6px 24px rgba(0,0,0,0.20);
-    word-break: break-word;
 }
 
 .confirm-box .check {
-    font-size: 2.5rem;
+    font-size: 3rem;
     margin-bottom: 0.5rem;
 }
 
 .confirm-box h2 {
     color: #00e5e7 !important;
-    font-size: 1.5rem !important;
-    line-height: 1.2;
-}
-
-.confirm-box .code {
-    font-family: monospace;
-    font-size: 1rem;
-    color: #00e5e7;
-    background: rgba(0, 207, 209, 0.10);
-    border: 1px solid rgba(0, 207, 209, 0.30);
-    padding: 6px 12px;
-    border-radius: 8px;
-    display: inline-block;
-    margin-top: 0.5rem;
-    max-width: 100%;
-    word-break: break-all;
+    font-size: 1.8rem !important;
+    margin-bottom: 0.8rem;
 }
 
 @media (max-width: 640px) {
     .confirm-box {
         padding: 1.1rem;
-        border-radius: 12px;
-    }
-
-    .confirm-box h2 {
-        font-size: 1.25rem !important;
     }
 
     .confirm-box .check {
-        font-size: 2rem;
+        font-size: 2.2rem;
     }
 
-    .confirm-box .code {
-        font-size: 0.92rem;
+    .confirm-box h2 {
+        font-size: 1.35rem !important;
     }
 }
 
@@ -369,35 +349,25 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     b = st.session_state.booking
 
-    juego_line = ""
-    if b.get("notas"):
-        juego_line = f"""
-        <div style="margin-top:0.7rem;color:#b7e4c7;font-size:0.95rem;">
-            Juego: <strong style="color:#95d5b2">{b['notas']}</strong>
-        </div>
+    st.markdown('<div class="confirm-box">', unsafe_allow_html=True)
+    st.markdown('<div class="check">🎉</div>', unsafe_allow_html=True)
+    st.markdown('<h2>¡Reservación confirmada!</h2>', unsafe_allow_html=True)
+
+    st.markdown(
+        f"""
+        Hola **{b['nombre']}**, te esperamos el  
+        **{b['fecha_label']}** a las **{b['horario']} hrs**.
         """
+    )
 
-    confirm_html = f"""
-    <div class="confirm-box">
-        <div class="check">🎉</div>
-        <h2>¡Reservación confirmada!</h2>
-        <div style="color:#b7e4c7;margin-top:0.5rem;line-height:1.6;">
-            Hola <strong>{b['nombre']}</strong>, te esperamos el<br>
-            <strong style="color:#95d5b2">{b['fecha_label']}</strong> a las
-            <strong style="color:#95d5b2">{b['horario']} hrs</strong>.
-        </div>
-        {juego_line}
-        <div style="margin-top:1rem;color:#74c69d;font-size:0.85rem;">
-            Tu código de reserva:
-        </div>
-        <div class="code">{b['id']}</div>
-        <div style="font-size:0.78rem;color:#74c69d;margin-top:1rem;">
-            Guarda este código — te lo pediremos al llegar.
-        </div>
-    </div>
-    """
+    if b.get("notas"):
+        st.markdown(f"**Juego:** {b['notas']}")
 
-    st.markdown(confirm_html, unsafe_allow_html=True)
+    st.markdown("Tu código de reserva:")
+    st.code(b["id"])
+
+    st.caption("Guarda este código — te lo pediremos al llegar.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Hacer otra reservación"):
