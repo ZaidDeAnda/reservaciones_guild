@@ -116,29 +116,55 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif !important; }
     background: linear-gradient(135deg, #181818, #252525);
     border: 1px solid rgba(0, 207, 209, 0.35);
     border-radius: 16px;
-    padding: 2rem;
+    padding: 1.4rem;
     text-align: center;
     color: #e6f7f7;
     box-shadow: 0 6px 24px rgba(0,0,0,0.20);
+    word-break: break-word;
 }
+
 .confirm-box .check {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 0.5rem;
 }
+
 .confirm-box h2 {
     color: #00e5e7 !important;
-    font-size: 1.8rem !important;
+    font-size: 1.5rem !important;
+    line-height: 1.2;
 }
+
 .confirm-box .code {
     font-family: monospace;
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #00e5e7;
     background: rgba(0, 207, 209, 0.10);
     border: 1px solid rgba(0, 207, 209, 0.30);
-    padding: 6px 16px;
+    padding: 6px 12px;
     border-radius: 8px;
     display: inline-block;
     margin-top: 0.5rem;
+    max-width: 100%;
+    word-break: break-all;
+}
+
+@media (max-width: 640px) {
+    .confirm-box {
+        padding: 1.1rem;
+        border-radius: 12px;
+    }
+
+    .confirm-box h2 {
+        font-size: 1.25rem !important;
+    }
+
+    .confirm-box .check {
+        font-size: 2rem;
+    }
+
+    .confirm-box .code {
+        font-size: 0.92rem;
+    }
 }
 
 /* ── Inputs ── */
@@ -343,35 +369,39 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     b = st.session_state.booking
 
-    juego_html = ""
+    juego_line = ""
     if b.get("notas"):
-        juego_html = f"""
-        <p style="color:#b7e4c7;margin-top:0.6rem">
+        juego_line = f"""
+        <div style="margin-top:0.7rem;color:#b7e4c7;font-size:0.95rem;">
             Juego: <strong style="color:#95d5b2">{b['notas']}</strong>
-        </p>
+        </div>
         """
 
-    st.markdown(f"""
+    confirm_html = f"""
     <div class="confirm-box">
         <div class="check">🎉</div>
         <h2>¡Reservación confirmada!</h2>
-        <p style="color:#b7e4c7;margin-top:0.5rem">
+        <div style="color:#b7e4c7;margin-top:0.5rem;line-height:1.6;">
             Hola <strong>{b['nombre']}</strong>, te esperamos el<br>
             <strong style="color:#95d5b2">{b['fecha_label']}</strong> a las
             <strong style="color:#95d5b2">{b['horario']} hrs</strong>.
-        </p>
-        {juego_html}
-        <div style="margin-top:1rem;color:#74c69d;font-size:0.85rem">Tu código de reserva:</div>
+        </div>
+        {juego_line}
+        <div style="margin-top:1rem;color:#74c69d;font-size:0.85rem;">
+            Tu código de reserva:
+        </div>
         <div class="code">{b['id']}</div>
-        <p style="font-size:0.78rem;color:#74c69d;margin-top:1rem">
+        <div style="font-size:0.78rem;color:#74c69d;margin-top:1rem;">
             Guarda este código — te lo pediremos al llegar.
-        </p>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+
+    st.markdown(confirm_html, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Hacer otra reservación"):
-        st.session_state.step    = 1
+        st.session_state.step = 1
         st.session_state.booking = {}
         st.rerun()
 
