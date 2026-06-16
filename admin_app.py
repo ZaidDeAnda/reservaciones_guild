@@ -125,8 +125,8 @@ def get_upcoming_weekends(n=6):
     today = date.today()
     weekends, d = [], today
     while len(weekends) < n * 2:
-        if d.weekday() == 5:
-            weekends += [d, d + timedelta(days=1)]
+        if d.weekday() == 4:
+            weekends += [d, d + timedelta(days=1), d + timedelta(days=2)]
         d += timedelta(days=1)
     return weekends[:n * 2]
 
