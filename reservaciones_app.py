@@ -250,7 +250,11 @@ if not future_dates:
     st.info("⏳ Aún no hay disponibilidad publicada. Por favor vuelve pronto.")
     st.stop()
 
-tab1, tab2 = st.tabs(["🪑 Reservar mesa", "🎲 Partidas agendadas"])
+tab1, tab2, tab3 = st.tabs([
+    "🪑 Reservar mesa",
+    "🎲 Partidas agendadas",
+    "📋 Mesas ocupadas",
+])
 
 # ═══ TAB 1 – Reservar ════════════════════════════════════════════════════════
 with tab1:
@@ -355,8 +359,47 @@ with tab1:
     elif st.session_state.step == 3:
         b = st.session_state.booking
 
+        current_availability = get_disponibilidad(db).get(b["fecha"], {})
+        reservations_at_booking_slot = sorted(
+            [
+                reservation for reservation in get_all_reservations(db)
+                if reservation.get("estado") != "cancelada"
+                and reservation.get("fecha") == b["fecha"]
+                and reservation.get("horario") == b["horario"]
+            ],
+            key=lambda reservation: reservation.get("creada_en", ""),
+        )
+        total_tables = current_availability.get("mesas", 0)
+        available_tables = max(total_tables - len(reservations_at_booking_slot), 0)
+
         st.markdown('<div class="step-card">', unsafe_allow_html=True)
         st.markdown('<div class="step-label">Paso 3 · Confirma tus datos</div>', unsafe_allow_html=True)
+        st.markdown("### 🪑 Mesas ya agendadas en este horario")
+        st.markdown(
+            f"**{len(reservations_at_booking_slot)} de {total_tables} mesas ocupadas** "
+            f"· {available_tables} disponibles"
+        )
+
+        if reservations_at_booking_slot:
+            for table_number, reservation in enumerate(reservations_at_booking_slot, start=1):
+                registered_by = escape(reservation.get("nombre", "Jugador"))
+                game = escape(reservation.get("notas", "").strip()) or "Juego no especificado"
+                st.markdown(
+                    f"""
+                    <div class="agenda-card">
+                        <div class="agenda-title">🪑 Mesa {table_number}</div>
+                        <div class="agenda-meta">
+                            👤 Registrada por: <strong>{registered_by}</strong><br>
+                            🎲 Juego: <strong>{game}</strong>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.success("✅ Aún no hay mesas registradas en este horario.")
+
+        st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown("### ¿Todos los datos son correctos?")
         st.markdown(
             f"""
@@ -523,19 +566,79 @@ with tab2:
                         horario = r.get("horario", "Sin horario")
                         juego = r.get("notas", "").strip()
 
-                        juego_texto = juego if juego else "Juego por definir"
-                        rival_texto = rival if rival else "Rival por definir"
+                        juego_texto = escape(juego) if juego else "Juego por definir"
+                        rival_texto = escape(rival) if rival else "Rival por definir"
 
                         st.markdown(f"""
                         <div class="agenda-card">
                             <div class="agenda-title">🎲 {juego_texto}</div>
                             <div class="agenda-meta">
-                                👤 Jugador: <strong>{nombre}</strong><br>
+                                👤 Jugador: <strong>{escape(nombre)}</strong><br>
                                 ⚔️ Rival: <strong>{rival_texto}</strong><br>
-                                🕐 Horario: <strong>{horario}</strong>
+                                🕐 Horario: <strong>{escape(horario)}</strong>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
+
+# ═══ TAB 3 – Mesas ocupadas por horario ══════════════════════════════════════
+with tab3:
+    st.markdown("### 📋 Mesas ocupadas por horario")
+    st.caption("Revisa quién ya registró una mesa antes de crear una nueva reservación.")
+
+    occupied_date_options = {
+        date_label(date_str): date_str for date_str in sorted(future_dates.keys())
+    }
+    occupied_date_label = st.selectbox(
+        "📅 Fecha",
+        list(occupied_date_options.keys()),
+        key="occupied_date",
+    )
+    occupied_date = occupied_date_options[occupied_date_label]
+    occupied_cfg = future_dates[occupied_date]
+    occupied_slot = st.selectbox(
+        "🕐 Horario",
+        sorted(occupied_cfg["horarios"]),
+        key="occupied_slot",
+    )
+
+    reservations_at_slot = sorted(
+        [
+            reservation for reservation in todas_reservas
+            if reservation.get("estado") != "cancelada"
+            and reservation.get("fecha") == occupied_date
+            and reservation.get("horario") == occupied_slot
+        ],
+        key=lambda reservation: reservation.get("creada_en", ""),
+    )
+    occupied_count = len(reservations_at_slot)
+    available_count = max(occupied_cfg["mesas"] - occupied_count, 0)
+
+    st.markdown(
+        f"**{occupied_count} de {occupied_cfg['mesas']} mesas ocupadas** "
+        f"· {available_count} disponibles"
+    )
+
+    if not reservations_at_slot:
+        st.success("✅ No hay mesas registradas en este horario.")
+    else:
+        for table_number, reservation in enumerate(reservations_at_slot, start=1):
+            registered_by = escape(reservation.get("nombre", "Jugador"))
+            rival = escape(reservation.get("rival", "").strip()) or "No especificado"
+            game = escape(reservation.get("notas", "").strip()) or "No especificado"
+
+            st.markdown(
+                f"""
+                <div class="agenda-card">
+                    <div class="agenda-title">🪑 Mesa {table_number}</div>
+                    <div class="agenda-meta">
+                        👤 Registrada por: <strong>{registered_by}</strong><br>
+                        ⚔️ Rival: <strong>{rival}</strong><br>
+                        🎲 Juego: <strong>{game}</strong>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 st.caption("♟ The Guild · ¿Preguntas? Contáctanos directamente.")
