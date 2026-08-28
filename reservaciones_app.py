@@ -1,5 +1,6 @@
 import streamlit as st
 import uuid
+from html import escape
 from datetime import date, datetime
 from db import (
     get_db, get_disponibilidad,
@@ -315,9 +316,21 @@ with tab1:
         st.markdown('<div class="step-card">', unsafe_allow_html=True)
         st.markdown('<div class="step-label">Paso 2 · Tus datos</div>', unsafe_allow_html=True)
 
-        nombre = st.text_input("👤 Nombre", placeholder="Comisario Yarrick")
-        rival = st.text_input("⚔️ Rival", placeholder="Ghazghkull")
-        notas = st.text_input("📝 Juego", placeholder="40k, Kill Team, Legion...")
+        nombre = st.text_input(
+            "👤 Nombre",
+            value=b.get("nombre", ""),
+            placeholder="Comisario Yarrick",
+        )
+        rival = st.text_input(
+            "⚔️ Rival",
+            value=b.get("rival", ""),
+            placeholder="Ghazghkull",
+        )
+        notas = st.text_input(
+            "📝 Juego",
+            value=b.get("notas", ""),
+            placeholder="40k, Kill Team, Legion...",
+        )
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -327,38 +340,69 @@ with tab1:
                 st.session_state.step = 1
                 st.rerun()
         with c2:
-            if st.button("Confirmar reservación ✓"):
+            if st.button("Revisar datos →"):
                 if not nombre.strip():
                     st.error("Por favor ingresa tu nombre.")
                 else:
-                    cfg = get_disponibilidad(db).get(b["fecha"], {})
-                    used = count_reservations(db, b["fecha"], b["horario"])
-                    if used >= cfg.get("mesas", 0):
-                        st.error("😔 Esta mesa acaba de ser reservada. Por favor elige otro horario.")
-                        st.session_state.step = 1
-                        st.rerun()
-                    else:
-                        booking_id = uuid.uuid4().hex[:8].upper()
-                        insert_reservation(db, {
-                            "id": booking_id,
-                            "fecha": b["fecha"],
-                            "horario": b["horario"],
-                            "nombre": nombre.strip(),
-                            "rival": rival.strip(),
-                            "notas": notas.strip(),
-                            "estado": "confirmada",
-                            "creada_en": datetime.now().isoformat(),
-                        })
-                        st.session_state.booking.update({
-                            "id": booking_id,
-                            "nombre": nombre.strip(),
-                            "rival": rival.strip(),
-                            "notas": notas.strip(),
-                        })
-                        st.session_state.step = 3
-                        st.rerun()
+                    st.session_state.booking.update({
+                        "nombre": nombre.strip(),
+                        "rival": rival.strip(),
+                        "notas": notas.strip(),
+                    })
+                    st.session_state.step = 3
+                    st.rerun()
 
     elif st.session_state.step == 3:
+        b = st.session_state.booking
+
+        st.markdown('<div class="step-card">', unsafe_allow_html=True)
+        st.markdown('<div class="step-label">Paso 3 · Confirma tus datos</div>', unsafe_allow_html=True)
+        st.markdown("### ¿Todos los datos son correctos?")
+        st.markdown(
+            f"""
+            <div class="summary">
+                <div class="row"><span class="lbl">Fecha</span><span class="val">{escape(b['fecha_label'])}</span></div>
+                <div class="row"><span class="lbl">Horario</span><span class="val">{escape(b['horario'])} hrs</span></div>
+                <div class="row"><span class="lbl">Nombre</span><span class="val">{escape(b['nombre'])}</span></div>
+                <div class="row"><span class="lbl">Rival</span><span class="val">{escape(b['rival']) if b['rival'] else 'No especificado'}</span></div>
+                <div class="row"><span class="lbl">Juego</span><span class="val">{escape(b['notas']) if b['notas'] else 'No especificado'}</span></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption("La reservación se guardará solamente cuando pulses Confirmar reservación.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("← Editar datos"):
+                st.session_state.step = 2
+                st.rerun()
+        with c2:
+            if st.button("Confirmar reservación ✓"):
+                cfg = get_disponibilidad(db).get(b["fecha"], {})
+                used = count_reservations(db, b["fecha"], b["horario"])
+                if used >= cfg.get("mesas", 0):
+                    st.error("😔 Esta mesa acaba de ser reservada. Por favor elige otro horario.")
+                    st.session_state.step = 1
+                    st.rerun()
+                else:
+                    booking_id = uuid.uuid4().hex[:8].upper()
+                    insert_reservation(db, {
+                        "id": booking_id,
+                        "fecha": b["fecha"],
+                        "horario": b["horario"],
+                        "nombre": b["nombre"],
+                        "rival": b["rival"],
+                        "notas": b["notas"],
+                        "estado": "confirmada",
+                        "creada_en": datetime.now().isoformat(),
+                    })
+                    st.session_state.booking["id"] = booking_id
+                    st.session_state.step = 4
+                    st.rerun()
+
+    elif st.session_state.step == 4:
         b = st.session_state.booking
 
         st.markdown('<div class="confirm-box">', unsafe_allow_html=True)
@@ -368,10 +412,10 @@ with tab1:
         st.markdown(
             f"""
             <div style="margin-top:0.5rem; line-height:1.6; font-size:1rem;">
-                Hola <strong>{b['nombre']}</strong>,<br>
+                Hola <strong>{escape(b['nombre'])}</strong>,<br>
                 te esperamos el<br>
-                <strong style="color:#00e5e7">{b['fecha_label']}</strong><br>
-                a las <strong style="color:#00e5e7">{b['horario']} hrs</strong>.
+                <strong style="color:#00e5e7">{escape(b['fecha_label'])}</strong><br>
+                a las <strong style="color:#00e5e7">{escape(b['horario'])} hrs</strong>.
             </div>
             """,
             unsafe_allow_html=True,
@@ -380,9 +424,9 @@ with tab1:
         if b.get("notas") or b.get("rival"):
             extras = []
             if b.get("notas"):
-                extras.append(f"🎲 Juego: <strong>{b['notas']}</strong>")
+                extras.append(f"🎲 Juego: <strong>{escape(b['notas'])}</strong>")
             if b.get("rival"):
-                extras.append(f"⚔️ Rival: <strong>{b['rival']}</strong>")
+                extras.append(f"⚔️ Rival: <strong>{escape(b['rival'])}</strong>")
 
             st.markdown(
                 f"""
